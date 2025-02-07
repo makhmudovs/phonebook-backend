@@ -1,7 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
-const cors = require('cors');
-const mongoose = require('mongoose');
+const cors = require("cors");
+const mongoose = require("mongoose");
 const app = express();
 require("dotenv").config();
 
@@ -11,12 +11,13 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static("dist"));
 
-
 const errorHandler = (err, req, res, next) => {
   console.log(err);
 
   if (err.name === "CastError") {
-    return res.status(400).send({ error: "malformed id" });
+    return res.status(400).json({ error: "malformed id" });
+  } else if (err.name === "ValidationError") {
+    return res.status(400).json({ error: err.message });
   }
 
   next(err);
@@ -37,30 +38,31 @@ app.use(
   })
 );
 
-
-
 const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' })
-}
+  response.status(404).send({ error: "unknown endpoint" });
+};
 
-
+// get all contacts
 app.get("/api/persons", (req, res, next) => {
   Person.find({}).then((persons) => {
     res.json(persons);
   });
 });
 
-app.get("/api/info", (req, res,next) => {
-  Person.find({}).then(persons =>{
-    res.send(`
+// get an info about contacts
+app.get("/api/info", (req, res, next) => {
+  Person.find({})
+    .then((persons) => {
+      res.send(`
       <div>
           <p>Phone book has info for ${persons.length} people</p>
           <p>${new Date().toLocaleString()}</p>
       </div>`);
-  }).catch(err=> next(err));
-  
+    })
+    .catch((err) => next(err));
 });
 
+// get a specific contact
 app.get("/api/persons/:id", (req, res, next) => {
   const { id } = req.params;
 
@@ -72,6 +74,7 @@ app.get("/api/persons/:id", (req, res, next) => {
   });
 });
 
+//delete a contact
 app.delete("/api/persons/:id", (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
     .then((result) => {
@@ -80,6 +83,7 @@ app.delete("/api/persons/:id", (req, res, next) => {
     .catch((err) => next(err));
 });
 
+// create a new contact
 app.post("/api/persons", async (req, res, next) => {
   const { name, number } = req.body;
   if (!name || !number || name.trim() === "" || number.trim() === "") {
@@ -94,11 +98,12 @@ app.post("/api/persons", async (req, res, next) => {
     res.json(savedPerson);
   } catch (error) {
     return res.status(400).json({
-      error: `Cannot saved person: ${error}`,
+      error: `Cannot save contact ${error}`,
     });
   }
 });
 
+// update a contact
 app.put("/api/persons/:id", (req, res, next) => {
   const body = req.body;
 
@@ -106,19 +111,21 @@ app.put("/api/persons/:id", (req, res, next) => {
     name: body.name,
     number: body.number,
   };
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(req.params.id, person, {
+    new: true,
+    runValidators: true,
+  })
     .then((updatedPerson) => {
       res.json(updatedPerson);
     })
     .catch((err) => next(err));
 });
 
-
 app.use(unknownEndpoint);
 app.use(errorHandler);
 
 app.use((req, res, next) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ error: "Route not found" });
 });
 
 const PORT = process.env.PORT;
