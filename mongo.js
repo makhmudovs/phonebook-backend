@@ -1,15 +1,15 @@
 
+const mongoose = require('mongoose');
 
 if (process.argv.length < 3) {
-  console.log("give password as argument");
+  console.log('give password as argument');
   process.exit(1);
 }
 
-const password = process.argv[2];
 const user = process.argv[3];
 const number = process.argv[4];
 
-mongoose.set("strictQuery", false);
+mongoose.set('strictQuery', false);
 
 mongoose.connect(process.env.MONGODB_URI);
 
@@ -18,11 +18,11 @@ const personSchema = new mongoose.Schema({
   number: String,
 });
 
-const Person = mongoose.model("Person", personSchema);
+const Person = mongoose.model('Person', personSchema);
 
 //if no user and number show the current collection
 if (!user && !number) {
-    Person.find({}).then((result) => {
+  Person.find({}).then((result) => {
     result.forEach((person) => {
       console.log(person);
     });
@@ -34,8 +34,8 @@ if (!user && !number) {
     number: number,
   });
 
-  contact.save().then((result) => {
-    console.log("note saved!");
+  contact.save().then(() => {
+    console.log('note saved!');
     mongoose.connection.close();
   });
 }
