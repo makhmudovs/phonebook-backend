@@ -1,22 +1,22 @@
-const express = require("express");
-const morgan = require("morgan");
-const cors = require("cors");
-const mongoose = require("mongoose");
+const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
+const mongoose = require('mongoose');
 const app = express();
-require("dotenv").config();
+require('dotenv').config();
 
-const Person = require("./models/person");
+const Person = require('./models/person');
 
 app.use(express.json());
 app.use(cors());
-app.use(express.static("dist"));
+app.use(express.static('dist'));
 
 const errorHandler = (err, req, res, next) => {
   console.log(err);
 
-  if (err.name === "CastError") {
-    return res.status(400).json({ error: "malformed id" });
-  } else if (err.name === "ValidationError") {
+  if (err.name === 'CastError') {
+    return res.status(400).json({ error: 'malformed id' });
+  } else if (err.name === 'ValidationError') {
     return res.status(400).json({ error: err.message });
   }
 
@@ -29,28 +29,28 @@ app.use(
       tokens.method(req, res),
       tokens.url(req, res),
       tokens.status(req, res),
-      tokens.res(req, res, "content-length"),
-      "-",
-      tokens["response-time"](req, res),
-      "ms",
+      tokens.res(req, res, 'content-length'),
+      '-',
+      tokens['response-time'](req, res),
+      'ms',
       JSON.stringify(req.body),
-    ].join(" ");
+    ].join(' ');
   })
 );
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: "unknown endpoint" });
+  response.status(404).send({ error: 'unknown endpoint' });
 };
 
 // get all contacts
-app.get("/api/persons", (req, res, next) => {
+app.get('/api/persons', (req, res, next) => {
   Person.find({}).then((persons) => {
     res.json(persons);
-  });
+  }).catch((err) => next(err));
 });
 
 // get an info about contacts
-app.get("/api/info", (req, res, next) => {
+app.get('/api/info', (req, res, next) => {
   Person.find({})
     .then((persons) => {
       res.send(`
@@ -63,32 +63,32 @@ app.get("/api/info", (req, res, next) => {
 });
 
 // get a specific contact
-app.get("/api/persons/:id", (req, res, next) => {
+app.get('/api/persons/:id', (req, res, next) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: "Invalid ID format" });
+    return res.status(400).json({ error: 'Invalid ID format' });
   }
   Person.findById(req.params.id).then((person) => {
     res.json(person);
-  });
+  }).catch((err) => next(err));
 });
 
 //delete a contact
-app.delete("/api/persons/:id", (req, res, next) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
-    .then((result) => {
+    .then(() => {
       res.status(204).end();
     })
     .catch((err) => next(err));
 });
 
 // create a new contact
-app.post("/api/persons", async (req, res, next) => {
+app.post('/api/persons', async (req, res) => {
   const { name, number } = req.body;
-  if (!name || !number || name.trim() === "" || number.trim() === "") {
+  if (!name || !number || name.trim() === '' || number.trim() === '') {
     return res.status(400).json({
-      error: "Missing information",
+      error: 'Missing information',
     });
   }
 
@@ -104,7 +104,7 @@ app.post("/api/persons", async (req, res, next) => {
 });
 
 // update a contact
-app.put("/api/persons/:id", (req, res, next) => {
+app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body;
 
   const person = {
@@ -124,11 +124,11 @@ app.put("/api/persons/:id", (req, res, next) => {
 app.use(unknownEndpoint);
 app.use(errorHandler);
 
-app.use((req, res, next) => {
-  res.status(404).json({ error: "Route not found" });
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
-  console.log("Server is running on PORT: ", PORT);
+  console.log('Server is running on PORT: ', PORT);
 });
