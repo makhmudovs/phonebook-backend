@@ -1,13 +1,13 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-mongoose.set("strictQuery", false);
+mongoose.set('strictQuery', false);
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then((res) => {
-    console.log("connected to Mongodb");
+  .then(() => {
+    console.log('connected to Mongodb');
   })
   .catch((err) => {
-    console.log("connection error MongoDb", err.message);
+    console.log('connection error MongoDb', err.message);
   });
 
 const personSchema = new mongoose.Schema({
@@ -17,15 +17,15 @@ const personSchema = new mongoose.Schema({
     required: true,
   },
   number: {
-    type: String,
-    validate: {
-      validator: function (v) {
+    type:String,
+    validate:{
+      validator:function(v){
         return /^\d{2,3}-\d{6,}$/.test(v);
       },
-      message: (props) => `${props.value} is not a valid phone number!`,
+      message:props => `${props.value} is not a valid phone number!`
     },
-    required: [true, "Contact phone number requied"],
+    required:[true,'Contact phone number requied']
   },
 });
 
-module.exports = mongoose.model("Person", personSchema);
+module.exports = mongoose.model('Person', personSchema);
